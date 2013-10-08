@@ -33,4 +33,17 @@ type TRSS* = tuple[title : string, link : string, description : string, language
                    skipDays : seq[string]]
 
 
+proc interpretRSS(rss : PXmlNode): TRSS = 
+    # Parses the RSS (internal function).
 
+
+proc parseRSS*(rss : string): TRSS = 
+    # Parses the RSS from a string.
+
+
+proc loadRSS*(filename : string): TRSS = 
+    # Loads the RSS from a file.
+
+
+proc getRSS*(url : string): TRSS = 
+    # Gets the RSS over HTTP.
