@@ -30,7 +30,7 @@ type TRSS* = tuple[title : string, link : string, description : string, language
                    managingEditor : string, webMaster : string, pubDate : string, lastBuildDate : string, 
                    category : seq[string], generator : string, docs : string, cloud : TRSSCloud, ttl : string,
                    image : TRSSImage, rating : string, textInput : TRSSTextInput, skipHours : seq[string],
-                   skipDays : seq[string]]
+                   skipDays : seq[string], items: seq[TRSSItem]]
 
 
 proc interpretRSS(data : string): TRSS = 
@@ -111,6 +111,49 @@ proc interpretRSS(data : string): TRSS =
             skipDays[i] = xml.findAll("day")[i].innerText
         rss.skipDays = skipDays
     
+    # If there are no items:
+    if xml.child("item") == nil:
+        rss.items = @[]
+        return rss
+    
+    # Otherwise, add the items.
+    var itemsXML : seq[PXmlNode] = xml.findAll("item")
+    var items = newSeq[TRSSItem](len(itemsXML))
+    for i in 0..high(itemsXML):
+        var item : TRSSItem
+        if itemsXML[i].child("title") != nil:
+            item.title = itemsXML[i].child("title").innerText
+        if itemsXML[i].child("link") != nil:
+            item.link = itemsXML[i].child("link").innerText
+        if itemsXML[i].child("description") != nil:
+            item.description = itemsXML[i].child("description").innerText
+        if itemsXML[i].child("author") != nil:
+            item.author = itemsXML[i].child("author").innerText
+        if itemsXML[i].child("category") != nil:
+            var itemCat = newSeq[string](len(itemsXML[i].findAll("category")))
+            for j in 0..high(itemsXML[i].findAll("category")):
+                itemCat[j] = itemsXML[i].findAll("category")[j].innerText
+            item.category = itemCat
+        if itemsXML[i].child("comments") != nil:
+            item.comments = itemsXML[i].child("comments").innerText
+        if itemsXML[i].child("enclosure") != nil:
+            var encl : TRSSEnclosure
+            encl.url = itemsXML[i].child("enclosure").attr("url")
+            encl.length = itemsXML[i].child("enclosure").attr("length")
+            encl.enclosureType = itemsXML[i].child("enclosure").attr("type")
+            item.enclosure = encl
+        if itemsXML[i].child("guid") != nil:
+            item.guid = itemsXML[i].child("guid").innerText
+        if itemsXML[i].child("pubDate") != nil:
+            item.pubDate = itemsXML[i].child("pubDate").innerText
+        if itemsXML[i].child("source") != nil:
+            item.sourceUrl = itemsXML[i].child("source").attr("url")
+            item.sourceText = itemsXML[i].child("source").innerText
+        items[i] = item
+    
+    # Add the items to the rest of the data.
+    rss.items = items
+    
     # Return the RSS data.
     return rss
 
@@ -137,7 +180,3 @@ proc getRSS*(url : string): TRSS =
     var rss : string = getContent(url)
     
     return interpretRSS(rss)
-
-
-var test : TRSS = loadRSS("test.xml")
-echo(test.skipDays[0])
