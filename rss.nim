@@ -44,6 +44,72 @@ proc interpretRSS(data : string): TRSS =
     
     # Fill the required fields.
     rss.title = xml.child("title").innerText
+    rss.link = xml.child("link").innerText
+    rss.description = xml.child("description").innerText
+    
+    # Fill the optional fields.
+    if xml.child("language") != nil:
+        rss.language = xml.child("language").innerText
+    if xml.child("copyright") != nil:
+        rss.copyright = xml.child("copyright").innerText
+    if xml.child("managingEditor") != nil:
+        rss.managingEditor = xml.child("managingEditor").innerText
+    if xml.child("webMaster") != nil:
+        rss.webMaster = xml.child("webMaster").innerText
+    if xml.child("pubDate") != nil:
+        rss.pubDate = xml.child("pubDate").innerText
+    if xml.child("lastBuildDate") != nil:
+        rss.lastBuildDate  = xml.child("lastBuildDate").innerText
+    if xml.child("category") != nil:
+        var catSeq = newSeq[string](len(xml.findAll("category")))
+        for i in 0..high(xml.findAll("category")):
+            catSeq[i] = xml.findAll("category")[i].innerText
+        rss.category = catSeq
+    if xml.child("generator") != nil:
+        rss.generator = xml.child("generator").innerText
+    if xml.child("docs") != nil:
+        rss.docs = xml.child("docs").innerText
+    if xml.child("cloud") != nil:
+        var cloud : TRSSCloud
+        cloud.domain = xml.child("cloud").attr("domain")
+        cloud.port = xml.child("cloud").attr("port")
+        cloud.path = xml.child("cloud").attr("path")
+        cloud.registerProcedure = xml.child("cloud").attr("registerProcedure")
+        cloud.protocol = xml.child("cloud").attr("protocol")
+        rss.cloud = cloud
+    if xml.child("ttl") != nil:
+        rss.ttl = xml.child("ttl").innerText
+    if xml.child("image") != nil:
+        var image : TRSSImage
+        image.url = xml.child("image").child("url").innerText
+        image.title = xml.child("image").child("title").innerText
+        image.link = xml.child("image").child("link").innerText
+        if xml.child("image").child("width") != nil:
+            image.width = xml.child("image").child("width").innerText
+        if xml.child("image").child("height") != nil:
+            image.height = xml.child("image").child("height").innerText
+        if xml.child("image").child("description") != nil:
+            image.description = xml.child("image").child("description").innerText
+        rss.image = image
+    if xml.child("rating") != nil:
+        rss.rating = xml.child("rating").innerText
+    if xml.child("textInput") != nil:
+        var textInput : TRSSTextInput
+        textInput.title = xml.child("textInput").child("title").innerText
+        textInput.description = xml.child("textInput").child("description").innerText
+        textInput.name = xml.child("textInput").child("name").innerText
+        textInput.link = xml.child("textInput").child("link").innerText
+        rss.textInput = textInput
+    if xml.child("skipHours") != nil:
+        var skipHours = newSeq[string](len(xml.findAll("hour")))
+        for i in 0..high(xml.findAll("hour")):
+            skipHours[i] = xml.findAll("hour")[i].innerText
+        rss.skipHours = skipHours
+    if xml.child("skipDays") != nil:
+        var skipDays = newSeq[string](len(xml.findAll("day")))
+        for i in 0..high(xml.findAll("day")):
+            skipDays[i] = xml.findAll("day")[i].innerText
+        rss.skipDays = skipDays
     
     # Return the RSS data.
     return rss
@@ -74,4 +140,4 @@ proc getRSS*(url : string): TRSS =
 
 
 var test : TRSS = loadRSS("test.xml")
-echo(test.title)
+echo(test.skipDays[0])
