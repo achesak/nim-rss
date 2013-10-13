@@ -33,8 +33,8 @@ type TRSS* = tuple[title : string, link : string, description : string, language
                    skipDays : seq[string], items: seq[TRSSItem]]
 
 
-proc interpretRSS(data : string): TRSS = 
-    # Parses the RSS (internal function).
+proc parseRSS*(data : string): TRSS = 
+    # Parses the RSS from a string.
     
     # Parse into XML.
     var xml : PXmlNode = parseXML(newStringStream(data)).child("channel")
@@ -158,19 +158,13 @@ proc interpretRSS(data : string): TRSS =
     return rss
 
 
-proc parseRSS*(rss : string): TRSS = 
-    # Parses the RSS from a string.
-    
-    return interpretRSS(rss)
-
-
 proc loadRSS*(filename : string): TRSS = 
     # Loads the RSS from a file.
     
     # Load the data from the file.
     var rss : string = readFile(filename)
     
-    return interpretRSS(rss)
+    return parseRSS(rss)
 
 
 proc getRSS*(url : string): TRSS = 
@@ -179,4 +173,4 @@ proc getRSS*(url : string): TRSS =
     # Get the data.
     var rss : string = getContent(url)
     
-    return interpretRSS(rss)
+    return parseRSS(rss)
