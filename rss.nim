@@ -1,7 +1,8 @@
-# Nimrod RSS (Really Simple Syndication) module
+# Nim RSS (Really Simple Syndication) module
 
 # Written by Adam Chesak.
-# Code released under the MIT open source license.
+# Released under the MIT open source license.
+
 
 # Import modules.
 import httpclient
@@ -12,35 +13,35 @@ import streams
 
 
 # Create the types.
-type TRSSEnclosure* = tuple[url : string, length : string, enclosureType : string]
+type RSSEnclosure* = tuple[url : string, length : string, enclosureType : string]
 
-type TRSSCloud* = tuple[domain : string, port : string, path : string, registerProcedure : string,
+type RSSCloud* = tuple[domain : string, port : string, path : string, registerProcedure : string,
                         protocol : string]
 
-type TRSSImage* = tuple[url : string, title : string, link : string, width : string, height : string,
+type RSSImage* = tuple[url : string, title : string, link : string, width : string, height : string,
                         description : string]
 
-type TRSSTextInput* = tuple[title : string, description : string, name : string, link : string]
+type RSSTextInput* = tuple[title : string, description : string, name : string, link : string]
 
-type TRSSItem* = tuple[title : string, link : string, description : string, author : string, category : seq[string],
-                       comments : string, enclosure : TRSSEnclosure, guid : string, pubDate : string, 
+type RSSItem* = tuple[title : string, link : string, description : string, author : string, category : seq[string],
+                       comments : string, enclosure : RSSEnclosure, guid : string, pubDate : string, 
                        sourceUrl : string, sourceText : string]
 
-type TRSS* = tuple[title : string, link : string, description : string, language : string, copyright : string,
+type RSS* = tuple[title : string, link : string, description : string, language : string, copyright : string,
                    managingEditor : string, webMaster : string, pubDate : string, lastBuildDate : string, 
-                   category : seq[string], generator : string, docs : string, cloud : TRSSCloud, ttl : string,
-                   image : TRSSImage, rating : string, textInput : TRSSTextInput, skipHours : seq[string],
-                   skipDays : seq[string], items: seq[TRSSItem]]
+                   category : seq[string], generator : string, docs : string, cloud : RSSCloud, ttl : string,
+                   image : RSSImage, rating : string, textInput : RSSTextInput, skipHours : seq[string],
+                   skipDays : seq[string], items: seq[RSSItem]]
 
 
-proc parseRSS*(data : string): TRSS = 
-    # Parses the RSS from a string.
+proc parseRSS*(data : string): RSS = 
+    ## Parses the RSS from the given string.
     
     # Parse into XML.
-    var xml : PXmlNode = parseXML(newStringStream(data)).child("channel")
+    var xml : XmlNode = parseXML(newStringStream(data)).child("channel")
     
     # Create the return object.
-    var rss : TRSS
+    var rss : RSS
     
     # Fill the required fields.
     rss.title = xml.child("title").innerText
@@ -70,7 +71,7 @@ proc parseRSS*(data : string): TRSS =
     if xml.child("docs") != nil:
         rss.docs = xml.child("docs").innerText
     if xml.child("cloud") != nil:
-        var cloud : TRSSCloud
+        var cloud : RSSCloud
         cloud.domain = xml.child("cloud").attr("domain")
         cloud.port = xml.child("cloud").attr("port")
         cloud.path = xml.child("cloud").attr("path")
@@ -80,7 +81,7 @@ proc parseRSS*(data : string): TRSS =
     if xml.child("ttl") != nil:
         rss.ttl = xml.child("ttl").innerText
     if xml.child("image") != nil:
-        var image : TRSSImage
+        var image : RSSImage
         image.url = xml.child("image").child("url").innerText
         image.title = xml.child("image").child("title").innerText
         image.link = xml.child("image").child("link").innerText
@@ -94,7 +95,7 @@ proc parseRSS*(data : string): TRSS =
     if xml.child("rating") != nil:
         rss.rating = xml.child("rating").innerText
     if xml.child("textInput") != nil:
-        var textInput : TRSSTextInput
+        var textInput : RSSTextInput
         textInput.title = xml.child("textInput").child("title").innerText
         textInput.description = xml.child("textInput").child("description").innerText
         textInput.name = xml.child("textInput").child("name").innerText
@@ -117,10 +118,10 @@ proc parseRSS*(data : string): TRSS =
         return rss
     
     # Otherwise, add the items.
-    var itemsXML : seq[PXmlNode] = xml.findAll("item")
-    var items = newSeq[TRSSItem](len(itemsXML))
+    var itemsXML : seq[XmlNode] = xml.findAll("item")
+    var items = newSeq[RSSItem](len(itemsXML))
     for i in 0..high(itemsXML):
-        var item : TRSSItem
+        var item : RSSItem
         if itemsXML[i].child("title") != nil:
             item.title = itemsXML[i].child("title").innerText
         if itemsXML[i].child("link") != nil:
@@ -137,7 +138,7 @@ proc parseRSS*(data : string): TRSS =
         if itemsXML[i].child("comments") != nil:
             item.comments = itemsXML[i].child("comments").innerText
         if itemsXML[i].child("enclosure") != nil:
-            var encl : TRSSEnclosure
+            var encl : RSSEnclosure
             encl.url = itemsXML[i].child("enclosure").attr("url")
             encl.length = itemsXML[i].child("enclosure").attr("length")
             encl.enclosureType = itemsXML[i].child("enclosure").attr("type")
@@ -158,8 +159,8 @@ proc parseRSS*(data : string): TRSS =
     return rss
 
 
-proc loadRSS*(filename : string): TRSS = 
-    # Loads the RSS from a file.
+proc loadRSS*(filename : string): RSS = 
+    ## Loads the RSS from the given ``filename``.
     
     # Load the data from the file.
     var rss : string = readFile(filename)
@@ -167,8 +168,8 @@ proc loadRSS*(filename : string): TRSS =
     return parseRSS(rss)
 
 
-proc getRSS*(url : string): TRSS = 
-    # Gets the RSS over HTTP.
+proc getRSS*(url : string): RSS = 
+    ## Gets the RSS over from the specified ``url``.
     
     # Get the data.
     var rss : string = getContent(url)
