@@ -13,25 +13,67 @@ import streams
 
 
 # Create the types.
-type RSSEnclosure* = tuple[url : string, length : string, enclosureType : string]
-
-type RSSCloud* = tuple[domain : string, port : string, path : string, registerProcedure : string,
-                        protocol : string]
-
-type RSSImage* = tuple[url : string, title : string, link : string, width : string, height : string,
-                        description : string]
-
-type RSSTextInput* = tuple[title : string, description : string, name : string, link : string]
-
-type RSSItem* = tuple[title : string, link : string, description : string, author : string, category : seq[string],
-                       comments : string, enclosure : RSSEnclosure, guid : string, pubDate : string, 
-                       sourceUrl : string, sourceText : string]
-
-type RSS* = tuple[title : string, link : string, description : string, language : string, copyright : string,
-                   managingEditor : string, webMaster : string, pubDate : string, lastBuildDate : string, 
-                   category : seq[string], generator : string, docs : string, cloud : RSSCloud, ttl : string,
-                   image : RSSImage, rating : string, textInput : RSSTextInput, skipHours : seq[string],
-                   skipDays : seq[string], items: seq[RSSItem]]
+type
+    RSS* = object
+        title* : string
+        link* : string
+        description* : string
+        language* : string
+        copyright* : string
+        managingEditor* : string
+        webMaster* : string
+        pubDate* : string
+        lastBuildDate* : string
+        category* : seq[string]
+        generator* : string
+        docs* : string
+        cloud* : RSSCloud
+        ttl* : string
+        image* : RSSImage
+        rating* : string
+        textInput* : RSSTextInput
+        skipHours* : seq[string]
+        skipDays* : seq[string]
+        items* : seq[RSSItem]
+    
+    RSSEnclosure* = object
+        url* : string
+        length* : string
+        enclosureType* : string
+    
+    RSSCloud* = object
+        domain* : string
+        port* : string
+        path* : string
+        registerProcedure* : string
+        protocol* : string
+    
+    RSSImage* = object
+        url* : string
+        title* : string
+        link* : string
+        width* : string
+        height* : string
+        description* : string
+    
+    RSSTextInput* = object
+        title* : string
+        description* : string
+        name* : string
+        link* : string
+    
+    RSSItem* = object
+        title* : string
+        link* : string
+        description* : string
+        author* : string
+        category* : seq[string]
+        comments* : string
+        enclosure* : RSSEnclosure
+        guid* : string
+        pubDate* : string
+        sourceUrl* : string
+        sourceText* : string
 
 
 proc parseRSS*(data : string): RSS = 
@@ -41,7 +83,7 @@ proc parseRSS*(data : string): RSS =
     var xml : XmlNode = parseXML(newStringStream(data)).child("channel")
     
     # Create the return object.
-    var rss : RSS
+    var rss : RSS = RSS()
     
     # Fill the required fields.
     rss.title = xml.child("title").innerText
@@ -71,7 +113,7 @@ proc parseRSS*(data : string): RSS =
     if xml.child("docs") != nil:
         rss.docs = xml.child("docs").innerText
     if xml.child("cloud") != nil:
-        var cloud : RSSCloud
+        var cloud : RSSCloud = RSSCloud()
         cloud.domain = xml.child("cloud").attr("domain")
         cloud.port = xml.child("cloud").attr("port")
         cloud.path = xml.child("cloud").attr("path")
@@ -81,7 +123,7 @@ proc parseRSS*(data : string): RSS =
     if xml.child("ttl") != nil:
         rss.ttl = xml.child("ttl").innerText
     if xml.child("image") != nil:
-        var image : RSSImage
+        var image : RSSImage = RSSImage()
         image.url = xml.child("image").child("url").innerText
         image.title = xml.child("image").child("title").innerText
         image.link = xml.child("image").child("link").innerText
@@ -95,7 +137,7 @@ proc parseRSS*(data : string): RSS =
     if xml.child("rating") != nil:
         rss.rating = xml.child("rating").innerText
     if xml.child("textInput") != nil:
-        var textInput : RSSTextInput
+        var textInput : RSSTextInput = RSSTextInput()
         textInput.title = xml.child("textInput").child("title").innerText
         textInput.description = xml.child("textInput").child("description").innerText
         textInput.name = xml.child("textInput").child("name").innerText
@@ -121,7 +163,7 @@ proc parseRSS*(data : string): RSS =
     var itemsXML : seq[XmlNode] = xml.findAll("item")
     var items = newSeq[RSSItem](len(itemsXML))
     for i in 0..high(itemsXML):
-        var item : RSSItem
+        var item : RSSItem = RSSItem()
         if itemsXML[i].child("title") != nil:
             item.title = itemsXML[i].child("title").innerText
         if itemsXML[i].child("link") != nil:
@@ -138,7 +180,7 @@ proc parseRSS*(data : string): RSS =
         if itemsXML[i].child("comments") != nil:
             item.comments = itemsXML[i].child("comments").innerText
         if itemsXML[i].child("enclosure") != nil:
-            var encl : RSSEnclosure
+            var encl : RSSEnclosure = RSSEnclosure()
             encl.url = itemsXML[i].child("enclosure").attr("url")
             encl.length = itemsXML[i].child("enclosure").attr("length")
             encl.enclosureType = itemsXML[i].child("enclosure").attr("type")

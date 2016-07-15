@@ -1,9 +1,9 @@
 [Package]
 name = "rss"
-version = "0.1.0"
+version = "0.2"
 author = "Adam Chesak"
-description = "Nimrod RSS parser"
+description = "Nim RSS parser"
 license = "MIT"
 
 [Deps]
-Requires: "nimrod >= 0.10.2"
+Requires: "nim >= 0.13"
