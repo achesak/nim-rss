@@ -1,9 +1,11 @@
-[Package]
-name = "rss"
+# Package
+
 version = "0.2"
 author = "Adam Chesak"
 description = "Nim RSS parser"
 license = "MIT"
+srcDir = "src"
 
-[Deps]
-Requires: "nim >= 0.13"
+# Deps
+
+requires "nim >= 0.13"
