@@ -228,6 +228,6 @@ proc getRSS*(url : string): RSS =
   ## Gets the RSS over from the specified ``url``.
 
   # Get the data.
-  var rss : string = getContent(url)
+  var rss : string = newHttpClient().getContent(url)
 
   return parseRSS(rss)
