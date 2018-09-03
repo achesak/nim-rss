@@ -7,9 +7,11 @@
 # Import modules.
 import httpclient
 import strutils
+import sequtils
 import xmlparser
 import xmltree
 import streams
+import future
 
 
 # Create the types.
@@ -75,6 +77,36 @@ type
     sourceUrl* : string
     sourceText* : string
 
+proc parseItem(node: XmlNode): RSSItem =
+  var item : RSSItem = RSSItem()
+  if node.child("title") != nil:
+    item.title = node.child("title").innerText
+  if node.child("link") != nil:
+    item.link = node.child("link").innerText
+  if node.child("description") != nil:
+    item.description = node.child("description").innerText
+  for key in @["author", "dc:creator"]:
+    if node.child(key) != nil:
+      item.author = node.child(key).innerText
+  if node.child("category") != nil:
+    item.category = map(node.findAll("category"), (x: XmlNode) -> string => x.innerText)
+  if node.child("comments") != nil:
+    item.comments = node.child("comments").innerText
+  if node.child("enclosure") != nil:
+    var encl : RSSEnclosure = RSSEnclosure()
+    encl.url = node.child("enclosure").attr("url")
+    encl.length = node.child("enclosure").attr("length")
+    encl.enclosureType = node.child("enclosure").attr("type")
+    item.enclosure = encl
+  if node.child("guid") != nil:
+    item.guid = node.child("guid").innerText
+  if node.child("pubDate") != nil:
+    item.pubDate = node.child("pubDate").innerText
+  if node.child("source") != nil:
+    item.sourceUrl = node.child("source").attr("url")
+    item.sourceText = node.child("source").innerText
+  return item
+
 proc parseRSS*(data : string): RSS =
   ## Parses the RSS from the given string.
 
@@ -106,10 +138,7 @@ proc parseRSS*(data : string): RSS =
   if channel.child("lastBuildDate") != nil:
     rss.lastBuildDate  = channel.child("lastBuildDate").innerText
   if channel.child("category") != nil:
-    var catSeq = newSeq[string](len(channel.findAll("category")))
-    for i in 0..high(channel.findAll("category")):
-      catSeq[i] = channel.findAll("category")[i].innerText
-    rss.category = catSeq
+    rss.category = map(channel.findAll("category"), (x: XmlNode) -> string => x.innerText)
 
   for key in @["generator", "dc:publisher"]:
     if channel.child(key) != nil:
@@ -154,15 +183,9 @@ proc parseRSS*(data : string): RSS =
     textInput.link = channel.child("textInput").child("link").innerText
     rss.textInput = textInput
   if channel.child("skipHours") != nil:
-    var skipHours = newSeq[string](len(channel.findAll("hour")))
-    for i in 0..high(channel.findAll("hour")):
-      skipHours[i] = channel.findAll("hour")[i].innerText
-    rss.skipHours = skipHours
+    rss.skipHours = map(channel.findAll("hour"), (x: XmlNode) -> string => x.innerText)
   if channel.child("skipDays") != nil:
-    var skipDays = newSeq[string](len(channel.findAll("day")))
-    for i in 0..high(channel.findAll("day")):
-      skipDays[i] = channel.findAll("day")[i].innerText
-    rss.skipDays = skipDays
+    rss.skipDays = map(channel.findAll("day"), (x: XmlNode) -> string => x.innerText)
 
   # If there are no items:
   if channel.child("item") == nil and root.child("item") == nil:
@@ -170,46 +193,10 @@ proc parseRSS*(data : string): RSS =
     return rss
 
   # Otherwise, add the items.
-  var itemsXML : seq[XmlNode]
   if channel.child("item") != nil:
-    itemsXML = channel.findAll("item")
+    rss.items = map(channel.findAll("item"), parseItem)
   else:
-    itemsXML = root.findAll("item")
-  var items = newSeq[RSSItem](len(itemsXML))
-  for i in 0..high(itemsXML):
-    var item : RSSItem = RSSItem()
-    if itemsXML[i].child("title") != nil:
-      item.title = itemsXML[i].child("title").innerText
-    if itemsXML[i].child("link") != nil:
-      item.link = itemsXML[i].child("link").innerText
-    if itemsXML[i].child("description") != nil:
-      item.description = itemsXML[i].child("description").innerText
-    if itemsXML[i].child("author") != nil:
-      item.author = itemsXML[i].child("author").innerText
-    if itemsXML[i].child("category") != nil:
-      var itemCat = newSeq[string](len(itemsXML[i].findAll("category")))
-      for j in 0..high(itemsXML[i].findAll("category")):
-        itemCat[j] = itemsXML[i].findAll("category")[j].innerText
-      item.category = itemCat
-    if itemsXML[i].child("comments") != nil:
-      item.comments = itemsXML[i].child("comments").innerText
-    if itemsXML[i].child("enclosure") != nil:
-      var encl : RSSEnclosure = RSSEnclosure()
-      encl.url = itemsXML[i].child("enclosure").attr("url")
-      encl.length = itemsXML[i].child("enclosure").attr("length")
-      encl.enclosureType = itemsXML[i].child("enclosure").attr("type")
-      item.enclosure = encl
-    if itemsXML[i].child("guid") != nil:
-      item.guid = itemsXML[i].child("guid").innerText
-    if itemsXML[i].child("pubDate") != nil:
-      item.pubDate = itemsXML[i].child("pubDate").innerText
-    if itemsXML[i].child("source") != nil:
-      item.sourceUrl = itemsXML[i].child("source").attr("url")
-      item.sourceText = itemsXML[i].child("source").innerText
-    items[i] = item
-
-  # Add the items to the rest of the data.
-  rss.items = items
+    rss.items = map(root.findAll("item"), parseItem)
 
   # Return the RSS data.
   return rss
