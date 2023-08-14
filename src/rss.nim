@@ -119,7 +119,9 @@ proc parseRSS*(data: string): RSS =
   # Fill the required fields.
   rss.title = channel.child("title").innerText
   rss.link = channel.child("link").innerText
-  rss.description = channel.child("description").innerText
+  # A feed may not have a description
+  if not isNil(channel.child("description")):
+    rss.description = channel.child("description").innerText
 
   # Fill the optional fields.
   for key in @["language", "dc:language"]:
